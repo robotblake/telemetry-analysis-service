@@ -89,6 +89,13 @@ class BaseSparkJobForm(CreatedByFormMixin, forms.ModelForm):
         model = models.SparkJob
         fields = []
 
+    def clean_notebook(self):
+        notebook_file = self.cleaned_data['notebook']
+        if notebook_file and not notebook_file.name.endswith(('.ipynb',)):
+            raise forms.ValidationError('Only Jupyter/IPython Notebooks are '
+                                        'allowed to be uploaded')
+        return notebook_file
+
 
 class NewSparkJobForm(BaseSparkJobForm):
     notebook = forms.FileField(
