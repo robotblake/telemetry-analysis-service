@@ -8,6 +8,7 @@ from ..forms import CreatedByFormMixin, PublicKeyFileField
 
 
 class NewClusterForm(CreatedByFormMixin, forms.ModelForm):
+    prefix = 'new'
 
     identifier = forms.RegexField(
         label="Cluster identifier",
@@ -68,6 +69,8 @@ This will generally be found in places like <code>~/.ssh/id_rsa.pub</code>.
 
 
 class EditClusterForm(CreatedByFormMixin, forms.ModelForm):
+    prefix = 'edit'
+
     identifier = forms.RegexField(
         required=True,
         regex=r'^[\w-]{1,100}$',
@@ -93,6 +96,8 @@ class EditClusterForm(CreatedByFormMixin, forms.ModelForm):
 
 
 class TerminateClusterForm(CreatedByFormMixin, forms.ModelForm):
+    prefix = 'terminate'
+
     confirmation = forms.RegexField(
         required=True,
         label='Confirm termination with cluster identifier',

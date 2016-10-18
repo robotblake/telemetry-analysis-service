@@ -95,6 +95,7 @@ class NewSparkJobForm(BaseSparkJobForm):
         label='Analysis Jupyter Notebook',
         help_text='A Jupyter (formally IPython) Notebook has the file extension .ipynb'
     )
+    prefix = 'new'
 
     def save(self):
         # create the model without committing, since we haven't
@@ -116,6 +117,7 @@ class NewSparkJobForm(BaseSparkJobForm):
 
 
 class EditSparkJobForm(BaseSparkJobForm):
+    prefix = 'edit'
 
     class Meta(BaseSparkJobForm.Meta):
         fields = [
@@ -125,6 +127,8 @@ class EditSparkJobForm(BaseSparkJobForm):
 
 
 class DeleteSparkJobForm(CreatedByFormMixin, forms.ModelForm):
+    prefix = 'delete'
+
     confirmation = forms.RegexField(
         required=True,
         label='Confirm termination with Spark job identifier',
