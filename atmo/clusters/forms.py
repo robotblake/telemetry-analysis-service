@@ -4,7 +4,8 @@
 from django import forms
 
 from . import models
-from ..forms import CreatedByFormMixin, PublicKeyFileField
+from ..forms.mixins import CreatedByFormMixin
+from ..forms.fields import PublicKeyFileField
 
 
 class NewClusterForm(CreatedByFormMixin, forms.ModelForm):

@@ -4,10 +4,11 @@
 from django import forms
 
 from . import models
-from ..forms import CreatedByFormMixin
+from ..forms.fields import CachedFileField
+from ..forms.mixins import CreatedByFormMixin, CachedFileFormMixin
 
 
-class BaseSparkJobForm(CreatedByFormMixin, forms.ModelForm):
+class BaseSparkJobForm(CachedFileFormMixin, CreatedByFormMixin, forms.ModelForm):
     identifier = forms.RegexField(
         required=True,
         label='Job identifier',
@@ -84,10 +85,19 @@ class BaseSparkJobForm(CreatedByFormMixin, forms.ModelForm):
         help_text='Date and time on which to disable the scheduled Spark job '
                   '- leave this blank if the job should not be disabled.',
     )
+    notebook = CachedFileField(
+        required=True,
+        widget=forms.FileInput(attrs={'class': 'form-control', 'required': 'required'}),
+        label='Analysis Jupyter Notebook',
+        help_text='A Jupyter/IPython Notebook has the file extension .ipynb'
+    )
 
     class Meta:
         model = models.SparkJob
-        fields = []
+        fields = [
+            'identifier', 'notebook', 'result_visibility', 'size',
+            'interval_in_hours', 'job_timeout', 'start_date', 'end_date'
+        ]
 
     def clean_notebook(self):
         notebook_file = self.cleaned_data['notebook']
@@ -98,12 +108,6 @@ class BaseSparkJobForm(CreatedByFormMixin, forms.ModelForm):
 
 
 class NewSparkJobForm(BaseSparkJobForm):
-    notebook = forms.FileField(
-        required=True,
-        widget=forms.FileInput(attrs={'class': 'form-control', 'required': 'required'}),
-        label='Analysis Jupyter Notebook',
-        help_text='A Jupyter (formally IPython) Notebook has the file extension .ipynb'
-    )
     prefix = 'new'
 
     def save(self):
@@ -118,21 +122,33 @@ class NewSparkJobForm(BaseSparkJobForm):
         spark_job.save(self.cleaned_data['notebook'])
         return spark_job
 
-    class Meta(BaseSparkJobForm.Meta):
-        fields = [
-            'identifier', 'notebook', 'result_visibility', 'size',
-            'interval_in_hours', 'job_timeout', 'start_date', 'end_date'
-        ]
-
 
 class EditSparkJobForm(BaseSparkJobForm):
     prefix = 'edit'
 
-    class Meta(BaseSparkJobForm.Meta):
-        fields = [
-            'identifier', 'result_visibility', 'size', 'interval_in_hours',
-            'job_timeout', 'start_date', 'end_date'
-        ]
+    notebook = CachedFileField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+        label='Analysis Jupyter Notebook (optional)',
+        help_text='A Jupyter/IPython Notebook has the file '
+                  'extension .ipynb.'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(EditSparkJobForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['notebook'].help_text += (
+                '<br />Current notebook: <strong>%s</strong>' % self.instance.notebook_name
+            )
+
+    def save(self):
+        # create the model without committing, since we haven't
+        # set the required created_by field yet
+        spark_job = super(EditSparkJobForm, self).save(commit=False)
+
+        # actually save the scheduled Spark job, and return the model object
+        spark_job.save(self.cleaned_data['notebook'])
+        return spark_job
 
 
 class DeleteSparkJobForm(CreatedByFormMixin, forms.ModelForm):
