@@ -23,7 +23,9 @@ class BaseSparkJobForm(CreatedByFormMixin, forms.ModelForm):
         widget=forms.Select(
             attrs={'class': 'form-control', 'required': 'required'}
         ),
-        label='Job result visibility'
+        label='Job result visibility',
+        help_text='Whether notebook results are uploaded to a public '
+                  'or private bucket',
     )
     size = forms.IntegerField(
         required=True,
